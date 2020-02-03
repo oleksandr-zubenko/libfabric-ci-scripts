@@ -32,7 +32,9 @@ set_aws_defaults() {
     echo "==> Establishing default parameters for region: $1"
 
     export AWS_DEFAULT_REGION=$1
-
+    #Use default vpc_id for each region
+    export vpc_id_reg=$(aws ec2 describe-vpcs --query "Vpcs[*].VpcId" --filters Name=isDefault,Values=true --output=text)
+    
     # The latest Deep Learning AMI (Amazon Linux 2) Image
     ami_amzn=$(aws ec2 describe-images --owners amazon --filters \
                 "Name=name,Values=*Deep Learning AMI (Amazon Linux 2)*" \
@@ -84,7 +86,7 @@ define_parameters() {
 create_efa_sg() {
 
     SGId=$(aws ec2 create-security-group --group-name "EFA-enabled-sg-$UUID" \
-        --description "EFA-enabled security group" --query "GroupId" --output=text)
+        --description "EFA-enabled security group" --vpc-id ${vpc_id_reg} --query "GroupId" --output=text)
     echo "==> Setting rules for efa sg ${SGId}"
     aws ec2 authorize-security-group-egress --group-id ${SGId} --protocol all --source-group ${SGId}
     aws ec2 authorize-security-group-ingress --group-id ${SGId} --protocol all --source-group ${SGId}
@@ -96,7 +98,7 @@ create_efa_sg() {
 create_ssh_sg() {
 
     SSHSG=$(aws ec2 create-security-group --group-name "ssh-group-$UUID" \
-        --description "allow ssh to host" --query "GroupId" --output=text)
+        --description "allow ssh to host" --vpc-id ${vpc_id_reg} --query "GroupId" --output=text)
     echo "==> Setting rules for ssh sg ${SSHSG}"
     aws ec2 authorize-security-group-ingress --port 22 --cidr 0.0.0.0/0 \
         --protocol tcp --group-id ${SSHSG}
