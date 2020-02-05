@@ -175,6 +175,7 @@ create_instance() {
                     --query "Instances[*].InstanceId" \
                     --output=text ${addl_args} 2>&1)
             create_instance_exit_code=$?
+            echo "create_instance_exit_code: ${create_instance_exit_code}"
             set -e
             # If run-instances is successful break from both the loops, else
             # find out whether the error was due to SERVER_ERROR or some other error
@@ -196,6 +197,7 @@ create_instance() {
             # If run-instances wasn't successful, and it was due to some other
             # error, exit and fail the test.
             if [ ${error} -eq 0 ]; then
+                echo "create_instance_exit_code: ${create_instance_exit_code}"
                 exit ${create_instance_exit_code}
             fi
         done
